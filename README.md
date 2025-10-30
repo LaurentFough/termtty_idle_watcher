@@ -1,4 +1,4 @@
-# 💤 TermTTY - Terminal Idle Watcher
+# 💤 TermTTY IDLE Watcher - Terminal Idle Watcher
 
 A cross-shell, POSIX-compatible idle watcher that executes a command or script after a configurable period of user inactivity.
 Supports **bash**, **zsh**, **fish**, and **POSIX sh** — runs quietly as a plugin or background daemon in your terminal sessions.
@@ -160,7 +160,7 @@ This script is written in pure **POSIX sh**, making it portable across:
 ### Linting / Validation
 
 ```bash
-shellcheck idle_watch_core.sh
+shellcheck termtty_idle_watcher_core.sh
 ```
 
 ---
