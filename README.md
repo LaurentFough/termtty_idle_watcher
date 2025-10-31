@@ -48,13 +48,14 @@ cat ./zsh/zshrc_snippet.zsh >> ~/.zshrc
 
 Set environment variables to customize behavior:
 
-| Variable | Default | Description |
-|-----------|----------|-------------|
-| `TERMTTY_IDLE_TIMEOUT` | `300` | Seconds of inactivity before trigger |
-| `TERMTTY_IDLE_CMD` | `echo IDLE ACTION TRIGGERED` | Command to execute when idle |
-| `TERMTTY_IDLE_ONCE` | `0` | If `1`, triggers once then exits |
-| `TERMTTY_IDLE_ACTIVITY_FILE` | `~/.termtty_idle_watcher_activity.$UID` | Timestamp file |
-| `TERMTTY_IDLE_PID_FILE` | `~/.termtty_idle_watcher_pid.$UID` | PID tracking file |
+| Variable | Default | Description | Default |
+|-----------|----------|-------------|-------------|
+| `TERMTTY_IDLE_WATCHER_ENABLE` | `0|1` | Enabled(1) or Disabled(0) | `1` |
+| `TERMTTY_IDLE_WATCHER_TIMEOUT` | `300` | Seconds of inactivity before trigger | `300` |
+| `TERMTTY_IDLE_WATCHER_CMD` | `echo IDLE ACTION TRIGGERED` | Command to execute when idle | `` |
+| `TERMTTY_IDLE_WATCHER_ONCE` | `0` | If `1`, triggers once then exits | `0` |
+| `TERMTTY_IDLE_WATCHER_ACTFILE` | `~/.termtty_idle_watcher_act.$UID` | Timestamp file | `~/.termtty_idle_watcher_act.$UID` |
+| `TERMTTY_IDLE_WATCHER_PIDFILE` | `~/.termtty_idle_watcher_pid.$UID` | PID tracking file | `~/.termtty_idle_watcher_pid.$UID` |
 
 ### Example: lock session after 5 minutes
 
@@ -77,11 +78,11 @@ Place the following file in `~/.config/fish/conf.d/termtty_idle_watcher.fish`:
 
 ```fish
 # Idle watcher plugin
-if test -z "$TERMTTY_IDLE_ACTIVITY_FILE"
+if test -z "$TERMTTY_IDLE_ACTFILE"
     if test -n "$XDG_RUNTIME_DIR"
-        set -gx TERMTTY_IDLE_ACTIVITY_FILE "~/.termtty_idle_watcher_activity."(id -u)
+        set -gx TERMTTY_IDLE_ACTFILE "~/.termtty_idle_watcher_act."(id -u)
     else
-        set -gx TERMTTY_IDLE_ACTIVITY_FILE "~/.termtty_idle_watcher_activity."(id -u)
+        set -gx TERMTTY_IDLE_ACTFILE "~/.termtty_idle_watcher_act."(id -u)
     end
 end
 
