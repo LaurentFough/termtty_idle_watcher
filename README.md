@@ -50,7 +50,7 @@ Set environment variables to customize behavior:
 
 | Variable | Default | Description | Default |
 |-----------|----------|-------------|-------------|
-| `TERMTTY_IDLE_WATCHER_ENABLE` | `0|1` | Enabled(1) or Disabled(0) | `1` |
+| `TERMTTY_IDLE_WATCHER_ENABLE` | `0\|1` | Enabled(1) or Disabled(0) | `1` |
 | `TERMTTY_IDLE_WATCHER_TIMEOUT` | `300` | Seconds of inactivity before trigger | `300` |
 | `TERMTTY_IDLE_WATCHER_CMD` | `echo IDLE ACTION TRIGGERED` | Command to execute when idle | `` |
 | `TERMTTY_IDLE_WATCHER_ONCE` | `0` | If `1`, triggers once then exits | `0` |
