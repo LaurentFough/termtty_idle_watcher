@@ -7,8 +7,8 @@ Supports **bash**, **zsh**, **fish**, and **POSIX sh** — runs quietly as a plu
 ## 🚀 Features
 - 🧩 **Cross-shell compatible** (`sh`, `bash`, `zsh`, `fish`)
 - 🔄 **Plugin-style autostart** for Fish (`~/.config/fish/conf.d`)
-- 🕓 **Configurable timeout** (`TERMTTY_IDLE_TIMEOUT`)
-- ⚙️ **Custom idle action** (`TERMTTY_IDLE_CMD`)
+- 🕓 **Configurable timeout** (`TERMTTY_IDLE_WATCHER_TIMEOUT`)
+- ⚙️ **Custom idle action** (`TERMTTY_IDLE_WATCHER_CMD`)
 - 🧠 **Per-user or per-TTY tracking** (uses `$UID` and optionally `tty`)
 - 🪵 **Structured logging** to `~/{log/}termtty_idle_watcher.log`
 - 🔒 Ideal for:
@@ -39,8 +39,8 @@ mkdir -p ~/.config/fish/conf.d
 cp ./fish/conf.d/termtty_idle_watcher.fish ~/.config/fish/conf.d/
 
 # Bash / Zsh
-cat ./bash/bashrc_snippet.sh >> ~/.bashrc
-cat ./zsh/zshrc_snippet.zsh >> ~/.zshrc
+cat ./posixrc/rc_snippet.sh >> ~/.bashrc
+cat ./posixrc/rc_snippet.sh >> ~/.zshrc
 ```
 
 ---
@@ -60,14 +60,14 @@ Set environment variables to customize behavior:
 ### Example: lock session after 5 minutes
 
 ```bash
-export TERMTTY_IDLE_TIMEOUT=300
-export TERMTTY_IDLE_CMD="gnome-screensaver-command -l"
+export TERMTTY_IDLE_WATCHER_TIMEOUT=300
+export TERMTTY_IDLE_WATCHER_CMD="gnome-screensaver-command -l"
 ```
 
 Or on macOS:
 
 ```bash
-export TERMTTY_IDLE_CMD="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
+export TERMTTY_IDLE_WATCHER_CMD="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
 ```
 
 ---
@@ -78,41 +78,41 @@ Place the following file in `~/.config/fish/conf.d/termtty_idle_watcher.fish`:
 
 ```fish
 # Idle watcher plugin
-if test -z "$TERMTTY_IDLE_ACTFILE"
+if test -z "$TERMTTY_IDLE_WATCHER_ACTFILE"
     if test -n "$XDG_RUNTIME_DIR"
-        set -gx TERMTTY_IDLE_ACTFILE "~/.termtty_idle_watcher_act."(id -u)
+        set -gx TERMTTY_IDLE_WATCHER_ACTFILE "~/.termtty_idle_watcher_act."(id -u)
     else
-        set -gx TERMTTY_IDLE_ACTFILE "~/.termtty_idle_watcher_act."(id -u)
+        set -gx TERMTTY_IDLE_WATCHER_ACTFILE "~/.termtty_idle_watcher_act."(id -u)
     end
 end
 
 function termtty_idle_touch_activity
-    date +%s > "$TERMTTY_IDLE_ACTIVITY_FILE" ^/dev/null
+    date +%s > "$TERMTTY_IDLE_WATCHER_ACTFILE" ^/dev/null
 end
 
 function __termtty_idle_watch_prompt_hook --on-event fish_prompt
-    termtty_idle_touch_activity
+    termtty_idle_watcher_touch_activity
 end
 
-function __termtty_idle_watch_preexec_hook --on-event fish_preexec
-    termtty_idle_touch_activity
+function __termtty_idle_watcher_preexec_hook --on-event fish_preexec
+    termtty_idle_watcher_touch_activity
 end
 
 function __termtty_idle_watcher_start
-    if test -f "$TERMTTY_IDLE_PID_FILE"
-        set -l oldpid (cat "$TERMTTY_IDLE_PID_FILE" ^/dev/null)
+    if test -f "$TERMTTY_IDLE_WATCHER_PIDFILE"
+        set -l oldpid (cat "$TERMTTY_IDLE_WATCHER_PIDFILE" ^/dev/null)
         if test -n "$oldpid"; and kill -0 $oldpid ^/dev/null
             return 0
         end
     end
 
-    if test -x "$TERMTTY_IDLE_WATCH_BIN"
-        set -l args "--timeout" "$IDLE_TIMEOUT" "--cmd" "$TERMTTY_IDLE_CMD" "--activity" "$TERMTTY_IDLE_ACTIVITY_FILE"
-        if test "$TERMTTY_IDLE_ONCE" = "1"
+    if test -x "$TERMTTY_IDLE_WATCHER_BIN"
+        set -l args "--timeout" "$TERMTTY_IDLE_WATCHER_TIMEOUT" "--cmd" "$TERMTTY_IDLE_WATCHER_CMD" "--activity" "$TERMTTY_IDLE_WATCHER_ACTFILE"
+        if test "$TERMTTY_IDLE_WATCHER_ONCE" = "1"
             set args $args "--once"
         end
-        sh "$TERMTTY_IDLE_WATCH_BIN" $args >> "$HOME/{log/}termtty_idle_watcher.log" 2>&1 &
-        echo $last_pid > "$IDLE_PID_FILE"
+        sh "$TERMTTY_IDLE_WATCHER_BIN" $args >> "$HOME/{log/}termtty_idle_watcher.log" 2>&1 &
+        echo $tsatus >"$TERMTTY_IDLE_WATCHER_PIDFILE"
     end
 end
 
@@ -125,8 +125,8 @@ __termtty_idle_watcher_start
 
 1. Every shell updates an activity timestamp file on user interaction.
 2. The background watcher polls this file.
-3. If no update occurs within `TERMTTY_IDLE_TIMEOUT` seconds:
-   - The configured command (`TERMTTY_IDLE_CMD`) runs.
+3. If no update occurs within `TERMTTY_IDLE_WATCHER_TIMEOUT` seconds:
+   - The configured command (`TERMTTY_IDLE_WATCHER_CMD`) runs.
    - Optionally, the watcher stops if `--once` is set.
 
 ---
@@ -136,17 +136,17 @@ __termtty_idle_watcher_start
 To verify activity tracking:
 
 ```bash
-cat $TERMTTY_IDLE_ACTIVITY_FILE
+cat $TERMTTY_IDLE_WATCHER_ACTFILE
 sleep 2
 ls
-cat $TERMTTY_IDLE_ACTIVITY_FILE
+cat $TERMTTY_IDLE_WATCHER_ACTFILE
 # Timestamp should update
 ```
 
 To test idle trigger:
 ```bash
-export TERMTTY_IDLE_TIMEOUT=10
-export TERMTTY_IDLE_CMD="notify-send 'Idle Triggered'"
+export TERMTTY_IDLE_WATCHER_TIMEOUT=10
+export TERMTTY_IDLE_WATCHER_CMD="notify-send 'Idle Triggered'"
 ```
 Leave the shell untouched for 10s and see the notification.
 
